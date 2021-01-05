@@ -64,7 +64,7 @@ An example of a distorted and undistorted chessboard is shown below:
 
 To keep the structure of the pipeline for the test image and video lane recognition tidy and clear as much as possible, the code has been unpacked in functions and subfunctions, that will be called by each pipeline. Test image pipeline is different form the video processing one, since some functions are not required for the first case.
 
-### - Thresholding and Combination
+### Thresholding and Combination
 
 - In the 3rd code cell, from line 1 to line 191, color space conversion functions (CSCfun) are listed. From Sobel conversion to LAB color space, each function inputs are the raw picture, a set of thresholds and other information required from the specific funtion. They convert the color space and apply the thresholds so to output a binary image.
 
@@ -72,7 +72,7 @@ To keep the structure of the pipeline for the test image and video lane recognit
 
 * At line 241, 3rd code cell, function `threshold()` receives the image, that is going to be passed through the previously described functions, the `algorithm` name list, and the set of parameters related. The funtion then calls the subfunctions listed in `algorithm` and required by the user for the task, and pass through raw image and parameters. It then calls `combine()` and returns `combine()` output.
 
-### - Warping, Sliding Windows and Search Around and Fit Poly
+### Warping, Sliding Windows and Search Around and Fit Poly
 
 - At line 1, 4th code cell, `warping()` utileses `cv2.getPerspectiveTransform()` and `cv2.warpPerspective` to return the warped image (Perspective Transform) or reverse - depending on the `direction` parameter. `vertices` as input and `dst` are the x and y coordinates of source and destination for the `cv2.getPerspectiveTransform()` function. 
 
@@ -165,7 +165,7 @@ To keep the structure of the pipeline for the test image and video lane recognit
 -  `horiz_width_avg`: lane horizontal width averaged over horizontal width at ymax (image bottom), ymax/2 (image y midpoint), ymin (image top);
 -  `detected_lines`: list of booleans that state if left or right line were detected by the algorithm.
 
-### - Pixel to M and Curvature Measurement
+### Pixel to M and Curvature Measurement
 
 * In the 5th code cell, `pixel_to_m()` function is used to convert pixels to meters. It outputs the converted polynomial coefficients and offset of the car with respect to the lane center position. [For more information regarding offset see below]
 
@@ -197,7 +197,7 @@ To keep the structure of the pipeline for the test image and video lane recognit
   right_curverad = (1 + (2*right_fit[0]*y_eval + right_fit[1])**2)**(3/2)/(np.absolute(2*right_fit[0]))
   ```
 
-### - Useful Class definition
+### Useful Class definition
 
 In the 6th code cell:
 
@@ -224,16 +224,16 @@ The pipeline for single test images is located in the 7th code cell. In 8th code
 
    For this implementation, source and destination coordinates where chosen as follow:
 
-   ```
-   src = np.float32(
-   		[[140, image.shape[0]],
-       [image.shape[1]/2-70,image.shape[0]/2+100],
-       [image.shape[1]/2+77,image.shape[0]/2+100],
-       [image.shape[1]-80,image.shape[0]]])
-   dst = np.float32(
-       [[150, image.shape[0]],
-       [150,0], [image.shape[1]-150,0],
-       [image.shape[1]-150,image.shape[0]]])
+   ```python
+   src = np.float32([
+     [140, image.shape[0]],
+     [image.shape[1]/2-70,image.shape[0]/2+100],
+     [image.shape[1]/2+77,image.shape[0]/2+100],
+     [image.shape[1]-80,image.shape[0]]])
+   dst = np.float32([
+     [150, image.shape[0]],
+     [150,0], [image.shape[1]-150,0],
+     [image.shape[1]-150,image.shape[0]]])
    ```
 
    Resulting in the coordinates:
