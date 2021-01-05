@@ -17,13 +17,12 @@ The goals / steps of this project are the following:
 
 [//]: # "Image References"
 
-[image1]: ./output_images/undist_test4.jpg "Undistorted"
-[image2]: ./test_images/test4.jpg "Road Transformed"
+[image1]: ./output_images/ChessUndist.png "Chessboard Undistorted"
+[Image2]: ./output_images/undist_test4.jpg "Undistorted"
 [image3]: ./output_images/combined3_test4.jpg "Binary Warped Example"
 [image4]: ./output_images/warped_test4.jpg "Warp Example"
 [image5]: ./output_images/combined_test4.jpg "Fit Visual"
 [image6]: ./output_images/result_test4.jpg "Output"
-[image7]: ./output_images/ChessUndist.png "Chessboard Undistorted"
 [video1]: ./output_videos/project_video.mp4 "Video"
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
@@ -58,7 +57,7 @@ def undistortion(img):
 
 An example of a distorted and undistorted chessboard is shown below:
 
-![alt text][image7]
+![alt text][image1]
 
 ## Function definition
 
@@ -214,7 +213,7 @@ The pipeline for single test images is located in the 7th code cell. In 8th code
 
    
 
-   ![alt text][image1]
+   ![alt text][image2]
 
    
 
@@ -305,7 +304,7 @@ The pipeline for single test images is located in the 7th code cell. In 8th code
 
 6. ### Lane Area Identification
 
-   In picture below, it is shown an example of the pipeline final output. On each image is printed the curvature radius averaged over left and right line curvature and the vehicle position with respect to lane center position:
+   In the picture below, it is shown an example of the pipeline final output. On each image is printed the curvature radius averaged over left and right line curvature and the vehicle position with respect to lane center position:
 
    
 
@@ -324,8 +323,15 @@ From line 1 to line 68, 9th code cell, as for the test images pipeline, undistor
 1. criteria for lines recognition algorithm (line 68 to line 69, 9th code cell):
 
    - `search_around_poly()`:
-     - if number of lines detected and stored in `lineL_list` (or `lineR_list`) is bigger than the parameter `n_avg`.
-     - if previous line (left or right) detected present `.reset` attribute different than 1 (reset not set).
+
+     - if number of lines detected and stored in `lineL_list` (or `lineR_list`) is bigger than the parameter `n_avg`. This is set so there is enough data to be passed to the function. Remember that the following are calculated is enough number of good lines are detected:
+
+       ```python
+       lineL_list[len(lineL_list)-1-counterL.num].best_fit
+       lineR_list[len(lineR_list)-1-counterR.num].best_fit
+       ```
+
+     - if previous line (left or right) instances `lineL_list[len(lineL_list)-1]`present `.reset` attribute different than 1 (reset not set).
 
    - `find_lane_pixels()` otherwise.
 
@@ -365,7 +371,7 @@ From line 1 to line 68, 9th code cell, as for the test images pipeline, undistor
    ally_L = lefty
    ```
 
-   where `diffs_L` is the left line polynomial coefficients difference between current frame and previous one.
+   where `diffs_L` is the left line polynomial coefficients difference between current frame and previous one. Same set of information is stored for the right line.
 
    If one of the line is not detected, a counter is set. If counter reaches 2, a reset flag is set and stored in the line instance. `linel` and `liner` are then appended in `lineL_list` and `lineR_list`.
 
@@ -381,24 +387,48 @@ From line 1 to line 68, 9th code cell, as for the test images pipeline, undistor
 
 5. In case lines were detected, the following sanity checks are performed, from line 217 to line 268, 9th code cell:
 
-   - Similar curvature
-   - Approximately separated by same distance
-   - Approximately parallel
+   - left and right lines have similar curvature in each video frame: a difference of `diffL` (and `diffR`) between previous and current line instances is calculated (at least two lines istances needed to be generated before the check) and if acceptable limits are not exceeded `sanity_fail`is set to `False`. Otherwise `True`.
+   - left and right lines are approximately separated by same distance: `horiz_width_avg` is used for this calculation. As before, if the value is contained in a range of acceptability, `sanity_failH`is set to `False`. Otherwise `True`.
+   - left and right lines are approximately parallel: this check is accomplished evaluating the difference between the `A` coefficients (x^2 coefficients) of `left_fit` and `right_fit`. 
 
-   if all three conditions are fulfilled, Sanity Check are passed, counter is reset (`.reset` attribute set to 0), fitting right and left are set to bestx averaged over current good lines detected.
+   If all three conditions are fulfilled, Sanity Checks are passed, counter is reset (`.reset` attribute set to 0), `fitting_right` and `fitting_left` are set to `bestx` averaged over current good lines detected.
 
-   if any of the conditions is not fulfilled, Sanity Check are not passed, counter keeps counting, fitting right and left are set to bestx averaged over previous good lines detected.
+   If any of the conditions is not fulfilled, Sanity Checks are not passed, counter keeps counting, `fitting_right` and `fitting_left` are set to `bestx` averaged over previous good lines detected.
 
-6. Visualization and curvature / offset information plotted on the raw image.
+6. In case lines were not detected, remember that the following would be the line instances (for left side in this case), from line 128 to line 149, 9th code cell:
 
-#### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
+   ```
+   detected_L = False
+   recent_xfitted_L = lineL_list[len(lineL_list)-1].recent_xfitted
+   bestx_L = lineL_list[len(lineL_list)-1].bestx
+   current_fit_L = lineL_list[len(lineL_list)-1].current_fit
+   best_fit_L = lineL_list[len(lineL_list)-1].best_fit
+   radius_of_curvature_L = lineL_list[len(lineL_list)-1].radius_of_curvature
+   line_base_pos_L = lineL_list[len(lineL_list)-1].line_base_pos
+   diffs_L = lineL_list[len(lineL_list)-1].diffs
+   allx_L = lineL_list[len(lineL_list)-1].allx
+   ally_L = lineL_list[len(lineL_list)-1].ally
+           
+   counterL.count()
+   ```
 
-Here's a [link to my video result](./project_video.mp4)
+   As you can see, the information are copied from previous detected good lines and stored in new line instances together with the `.detected` attribute set to `False`.
+
+   Therefore:
+
+   ```python
+   else:
+     fitting_left = recent_xfittedL
+     fitting_right = recent_xfittedR
+   ```
+
+7. Good recognised lines or previous fitting lines are then plotted on the initial raw video frame, together with curvature / offset information.
+
+Here's the link to the [project video result](./project_video.mp4).
 
 ---
 
 ## Discussion
 
-#### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
-
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+- In order to furtherly improve the code capabilities, it will be necessary implement some automatic process for source vertices identification for the `warping()` function, instead of fixed hardcoded values, so the warping window would adapt itself to each video frame / test image.
+- It would be also necesary implementing an iterative automatic election of best thresholding functions for an effective line recognition in the warped image.
