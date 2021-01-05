@@ -321,33 +321,75 @@ As stated before, the video processing pipeline is slightly different from the t
 
 From line 1 to line 68, 9th code cell, as for the test images pipeline, undistortion, warping and thresholding are performed to the video frame in this case. Afterwards, the steps below are followed:
 
-1. criteria for algorithm used for lines recognition (line 68 to line 69, 9th code cell):
+1. criteria for lines recognition algorithm (line 68 to line 69, 9th code cell):
 
    - `search_around_poly()`:
-     - if number of lines detected and stored in lineL_list (or lineR_list) is bigger than the parameter `n_avg`.
+     - if number of lines detected and stored in `lineL_list` (or `lineR_list`) is bigger than the parameter `n_avg`.
      - if previous line (left or right) detected present `.reset` attribute different than 1 (reset not set).
 
    - `find_lane_pixels()` otherwise.
 
-2. bestx and best_fit averages calculated over goodLine_list left and right (in order to exclude lines that don't pass Sanity Check.
+2. From line 88 to line 92, 9th code cell, `bestx` and `best_fit` averages are calculated over `goodLine_list` left and right (in order to exclude lines that don't pass Sanity Check).
 
-3. Coordinates and offset transformed from pixels to meters via "pixel_to_m()", fit coefficients calculated.
+   ```python
+   if len(goodLineL_list) >= n_avg:
+           bestxL = np.sum(line.recent_xfitted for line in goodLineL_list[len(goodLineL_list)-n_avg:len(goodLineL_list)])/n_avg
+           best_fitL = np.sum(line.current_fit for line in goodLineL_list[len(goodLineL_list)-n_avg:len(goodLineL_list)])/n_avg
+           bestxR = np.sum(line.recent_xfitted for line in goodLineR_list[len(goodLineR_list)-n_avg:len(goodLineR_list)])/n_avg
+           best_fitR = np.sum(line.current_fit for line in goodLineR_list[len(goodLineR_list)-n_avg:len(goodLineR_list)])/n_avg
+   ```
 
-4. Curvature radius + Offset calculation via "measure_curvature_pixels()".
+3. Pixels to meters converstion and curvature radius and vehicle position calculation as in test image pipeline (line 96 to line 100, 9th code cell)
 
-5. Line instance generation based on "detected" information (values stored in "linel" and liner" and subsequently appended in list). If one of the line is not detected, a counter is set, if counter reaches 2, reset flag is set.
+4. From line 104 to line 211, 9th code cell, Line instances (`linel` and `liner`) are generated based on `detected` information. 
 
-6. Sanity Check performed if lines were detected, :
+   ```python
+   detected_L = detected_lines[0]
+   recent_xfitted_L = left_fitx
+   current_fit_L = left_fit
+   try:
+     bestx_L = bestxL
+     best_fit_L = best_fitL
+   except UnboundLocalError:
+     bestx_L = []
+     best_fit_L = []
+   radius_of_curvature_L = left_curverad
+   line_base_pos_L = left_fit[0]*max(ploty)**2 + left_fit[1]*max(ploty) + left_fit[2]
+   try:
+     diffs_L = current_fit_L - lineL_list[len(lineL_list)-1].current_fit
+   except UnboundLocalError:
+     diffs_L = np.array([0,0,0], dtype='float') 
+   except IndexError:
+     diffs_L = np.array([0,0,0], dtype='float') 
+   allx_L = leftx
+   ally_L = lefty
+   ```
+
+   where `diffs_L` is the left line polynomial coefficients difference between current frame and previous one.
+
+   If one of the line is not detected, a counter is set. If counter reaches 2, a reset flag is set and stored in the line instance. `linel` and `liner` are then appended in `lineL_list` and `lineR_list`.
+
+   ```python
+   linel = Line(detected_L, recent_xfitted_L, bestx_L, current_fit_L, best_fit_L, radius_of_curvature_L, line_base_pos_L, diffs_L, allx_L, ally_L, reset)
+   
+   lineL_list.append(linel)
+       
+   liner = Line(detected_R, recent_xfitted_R, bestx_R, current_fit_R, best_fit_R, radius_of_curvature_R, line_base_pos_R, diffs_R, allx_R, ally_R, reset)
+   
+   lineR_list.append(liner)
+   ```
+
+5. In case lines were detected, the following sanity checks are performed, from line 217 to line 268, 9th code cell:
 
    - Similar curvature
    - Approximately separated by same distance
    - Approximately parallel
 
-   if all three conditions are fulfilled, Sanity Check are passed, counter is reset (.reset attribute = 0), fitting right and left are set to bestx averaged over current good lines detected.
+   if all three conditions are fulfilled, Sanity Check are passed, counter is reset (`.reset` attribute set to 0), fitting right and left are set to bestx averaged over current good lines detected.
 
    if any of the conditions is not fulfilled, Sanity Check are not passed, counter keeps counting, fitting right and left are set to bestx averaged over previous good lines detected.
 
-7. Visualization and curvature/ offset information plotted on the raw image.
+6. Visualization and curvature / offset information plotted on the raw image.
 
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
