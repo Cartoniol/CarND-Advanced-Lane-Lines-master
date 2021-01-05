@@ -15,6 +15,8 @@ The goals / steps of this project are the following:
 * Warp the detected lane boundaries back onto the original image.
 * Output visual display of the lane boundaries and numerical estimation of lane curvature and vehicle position.
 
+The code is stored in the file [P2.ipynb](./P2.ipynb).
+
 [//]: # "Image References"
 
 [image1]: ./output_images/ChessUndist.png "Chessboard Undistorted"
@@ -34,8 +36,6 @@ The goals / steps of this project are the following:
 ---
 
 ## Camera Calibration
-
-The code for this step is contained in the second code cell of the IPython notebook located in "./P2.ipynb".
 
 The aim of the code in the 2nd code cell is to process a set of chessboard images taken from different angulation, distance and camera effect, to obtain camera calibration matrix `mtx`and distortion coefficients `dist` via `cv2.calibrateCamera()`, to finally calibrate the `undistortion()` function. The code follows the steps below:
 
