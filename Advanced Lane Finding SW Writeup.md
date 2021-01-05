@@ -30,11 +30,11 @@ The goals / steps of this project are the following:
 
 ### In the following, the main functions used for the lane recognition code are described together with the rubric points.
 
-### The rubric points are the main features that the SW needs to have.  Each point has been addressed and its implementation is described in detailed.
+### The rubric points are the main features that the SW needs to have.  Each point has been addressed and its implementation is supported by example images.
 
 ---
 
-### Camera Calibration
+## Camera Calibration
 
 The code for this step is contained in the second code cell of the IPython notebook located in "./P2.ipynb".
 
@@ -60,11 +60,11 @@ An example of a distorted and undistorted chessboard is shown below:
 
 ![alt text][image7]
 
-### Function definition
+## Function definition
 
 To keep the structure of the pipeline for the test image and video lane recognition tidy and clear as much as possible, the code has been unpacked in functions and subfunctions, that will be called by each pipeline. Test image pipeline is different form the video processing one, since some functions are not required for the first case.
 
-##### - Thresholding and Combination
+### - Thresholding and Combination
 
 - In the 3rd code cell, from line 1 to line 191, color space conversion functions (CSCfun) are listed. From Sobel conversion to LAB color space, each function inputs are the raw picture, a set of thresholds and other information required from the specific funtion. They convert the color space and apply the thresholds so to output a binary image.
 
@@ -72,7 +72,7 @@ To keep the structure of the pipeline for the test image and video lane recognit
 
 * At line 241, 3rd code cell, function `threshold()` receives the image, that is going to be passed through the previously described functions, the `algorithm` name list, and the set of parameters related. The funtion then calls the subfunctions listed in `algorithm` and required by the user for the task, and pass through raw image and parameters. It then calls `combine()` and returns `combine()` output.
 
-##### - Warping, Sliding Windows and Search Around and Fit Poly
+### - Warping, Sliding Windows and Search Around and Fit Poly
 
 - At line 1, 4th code cell, `warping()` utileses `cv2.getPerspectiveTransform()` and `cv2.warpPerspective` to return the warped image (Perspective Transform) or reverse - depending on the `direction` parameter. `vertices` as input and `dst` are the x and y coordinates of source and destination for the `cv2.getPerspectiveTransform()` function. 
 
@@ -165,7 +165,7 @@ To keep the structure of the pipeline for the test image and video lane recognit
 -  `horiz_width_avg`: lane horizontal width averaged over horizontal width at ymax (image bottom), ymax/2 (image y midpoint), ymin (image top);
 -  `detected_lines`: list of booleans that state if left or right line were detected by the algorithm.
 
-##### - Pixel to M and Curvature Measurement
+### - Pixel to M and Curvature Measurement
 
 * In the 5th code cell, `pixel_to_m()` function is used to convert pixels to meters. It outputs the converted polynomial coefficients and offset of the car with respect to the lane center position. [For more information regarding offset see below]
 
@@ -197,41 +197,18 @@ To keep the structure of the pipeline for the test image and video lane recognit
   right_curverad = (1 + (2*right_fit[0]*y_eval + right_fit[1])**2)**(3/2)/(np.absolute(2*right_fit[0]))
   ```
 
-##### - Useful Class definition
+### - Useful Class definition
 
 In the 6th code cell:
 
 * A Line class has been defined in order to track lines information.
 * counterL & counterR class defined for count and reset function.
 
-## Pipeline for test video
+## Pipeline (single images)
 
-* Input: video frame.
-* Udistortion: undistort video frame (perspective transform via camera matrix and distortion coeff).
-* Warping: warped image (bird-eye view).
-* Colour space tranformation: binary combined warped video frame.
-* Criteria for algorithm used for lines recognition:
-    * "search_around_poly()":
-        * if # of lines detected and stored in lineL_list (or lineR_list) is bigger than a parameter.
-        * if previous line (left or right) detected present .reset attribute different than 1 (.reset not set).
-    * "find_lane_pixels()" otherwise.
-* bestx and best_fit averages calculated over goodLine_list left and right (in order to exclude lines that don't pass Sanity Check.
-* Coordinates and offset transformed from pixels to meters via "pixel_to_m()", fit coefficients calculated.
-* Curvature radius + Offset calculation via "measure_curvature_pixels()".
-* Line instance generation based on "detected" information (values stored in "linel" and liner" and subsequently appended in list). If one of the line is not detected, a counter is set, if counter reaches 2, reset flag is set.
-* Sanity Check performed if lines were detected, :
-    * Similar curvature
-    * Approximately separated by same distance
-    * Approximately parallel
-        * if all three conditions are fulfilled, Sanity Check are passed, counter is reset (.reset attribute = 0), fitting right and left are set to bestx averaged over current good lines detected.
-        * if any of the conditions is not fulfilled, Sanity Check are not passed, counter keeps counting, fitting right and left are set to bestx averaged over previous good lines detected.
-* Visualization and curvature/ offset information plotted on the raw image.
+The pipeline for single test images is located in the 7th code cell. In 8th code cell, instead, is stored the code for test images processing. Iterating throughout images, at line 13, 8th code cell, `process_img()` is called.
 
-### Pipeline (single images)
-
-The pipeline for single test images is located in the 7th code cell.
-
-1. #### Image distortion correction
+1. ### Image Distortion Correction
 
    At line 7, 7th code cell, `undist` is the undistorted image resulting from `undistortion()`. An example is shown below:
 
@@ -241,7 +218,7 @@ The pipeline for single test images is located in the 7th code cell.
 
    
 
-2. #### Perspective Transform
+2. ### Perspective Transform
 
    At line 23, 7th code cell, following the distortion correction, to the undistorted picture is subsequently applied the perspective transformation `warping()`, after the definition of `vertices`coordinates. 
 
@@ -276,7 +253,7 @@ The pipeline for single test images is located in the 7th code cell.
 
    
 
-3. #### Thresholded Binary Image
+3. ### Thresholded Binary Image
 
    At line 29, 7th code cell, `algorithm` is a list of names associated to the available implemented thresholding functions, together with the thresholds parameters. Both names and thresholds can be freely set by the user. 
 
@@ -292,7 +269,7 @@ The pipeline for single test images is located in the 7th code cell.
 
    
 
-4. #### Lane-line Identification and Polynomial Fit
+4. ### Lane-line Identification and Polynomial Fit
 
    At line 74, 7th code cell, `find_lane_pixels()` is outputing all the information discussed before in Function Definition. Below there is an example of a binary image with fitting lines overlaid:
 
@@ -302,19 +279,75 @@ The pipeline for single test images is located in the 7th code cell.
 
    
 
-5. #### Curvature Radius, Lane and Vehicle Position
+5. ### Curvature Radius, Lane and Vehicle Position
 
-- The vehicle position is calculated at line 87, 7th code cell, 
+   - The vehicle position is calculated at line 87, 7th code cell.
 
-#### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
+     ```python
+     offset = lane_pos - image.shape[1]/2
+     ```
 
-I implemented this step in lines # through # in my code in `yet_another_file.py` in the function `map_lane()`.  Here is an example of my result on a test image:
+     It is assumed that the camera is mounted on the center of the car. Thus, the raw image x mid-point `image.shape[1]/2 ` corresponds with the vehicle center position.
 
-![alt text][image6]
+   - Offset and fitting coefficients (and y coordinates) are then converted from pixels to meters at line 89, 7th code cell, with `pixel_to_m()`.
+
+     ```
+     ploty_cr, left_fit_cr, right_fit_cr, offset_cr = pixel_to_m(ploty, lefty, leftx, righty, rightx, offset)
+     ```
+
+   - At line 91, 7th code cell, `left_curverad` and `right_curverad` are then calculated via `measure_curvature_pixels()`.
+
+     ```
+     left_curverad, right_curverad = measure_curvature_pixels(ploty_cr, left_fit_cr, right_fit_cr)
+     ```
+
+     
+
+6. ### Lane Area Identification
+
+   In picture below, it is shown an example of the pipeline final output. On each image is printed the curvature radius averaged over left and right line curvature and the vehicle position with respect to lane center position:
+
+   
+
+   ![alt text][image6]
+
+   
 
 ---
 
-### Pipeline (video)
+## Pipeline (video processing)
+
+As stated before, the video processing pipeline is slightly different from the test image one. The code is stored in the 9th code cell of the IPython notebook located in "./P2.ipynb".
+
+From line 1 to line 68, 9th code cell, as for the test images pipeline, undistortion, warping and thresholding are performed to the video frame in this case. Afterwards, the steps below are followed:
+
+1. criteria for algorithm used for lines recognition (line 68 to line 69, 9th code cell):
+
+   - `search_around_poly()`:
+     - if number of lines detected and stored in lineL_list (or lineR_list) is bigger than the parameter `n_avg`.
+     - if previous line (left or right) detected present `.reset` attribute different than 1 (reset not set).
+
+   - `find_lane_pixels()` otherwise.
+
+2. bestx and best_fit averages calculated over goodLine_list left and right (in order to exclude lines that don't pass Sanity Check.
+
+3. Coordinates and offset transformed from pixels to meters via "pixel_to_m()", fit coefficients calculated.
+
+4. Curvature radius + Offset calculation via "measure_curvature_pixels()".
+
+5. Line instance generation based on "detected" information (values stored in "linel" and liner" and subsequently appended in list). If one of the line is not detected, a counter is set, if counter reaches 2, reset flag is set.
+
+6. Sanity Check performed if lines were detected, :
+
+   - Similar curvature
+   - Approximately separated by same distance
+   - Approximately parallel
+
+   if all three conditions are fulfilled, Sanity Check are passed, counter is reset (.reset attribute = 0), fitting right and left are set to bestx averaged over current good lines detected.
+
+   if any of the conditions is not fulfilled, Sanity Check are not passed, counter keeps counting, fitting right and left are set to bestx averaged over previous good lines detected.
+
+7. Visualization and curvature/ offset information plotted on the raw image.
 
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
@@ -322,7 +355,7 @@ Here's a [link to my video result](./project_video.mp4)
 
 ---
 
-### Discussion
+## Discussion
 
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
